@@ -523,8 +523,10 @@ class MessageSnapshot:
         self.type: MessageType = try_enum(MessageType, data['type'])
         # this attribute is only sent by Fluxer, if it's not empty
         self.content: str = data.get('content', '')
-        self.embeds: List[Embed] = [Embed.from_dict(a) for a in data['embeds']]
-        self.attachments: List[Attachment] = [Attachment(data=a, state=state) for a in data['attachments']]
+        # this attribute is only sent by Fluxer, if it's not empty
+        self.embeds: List[Embed] = [Embed.from_dict(a) for a in data.get('embeds', [])]
+        # this attribute is only sent by Fluxer, if it's not empty
+        self.attachments: List[Attachment] = [Attachment(data=a, state=state) for a in data.get('attachments', [])]
         self.created_at: datetime.datetime = utils.parse_time(data['timestamp'])
         # this attribute is only sent by Fluxer, if it's not empty
         self._edited_timestamp: Optional[datetime.datetime] = utils.parse_time(data.get('edited_timestamp'))
