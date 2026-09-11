@@ -209,10 +209,8 @@ class StickerItem(_StickerTag):
                 (data.get('animated') and StickerFormatType.gif or StickerFormatType.png).value,
             ),
         )
-        if self.format is StickerFormatType.gif:
-            self.url: str = f'https://media.discordapp.net/stickers/{self.id}.gif'
-        else:
-            self.url: str = f'{Asset.BASE}/stickers/{self.id}.webp'
+        ext = 'gif' if self.format is StickerFormatType.gif else 'webp'
+        self.url: str = f'{Asset.BASE}/stickers/{self.id}.{ext}'
 
     def __repr__(self) -> str:
         return f'<StickerItem id={self.id} name={self.name!r} format={self.format}>'
@@ -292,10 +290,8 @@ class Sticker(_StickerTag):
                 (data.get('animated') and StickerFormatType.gif or StickerFormatType.png).value,
             ),
         )
-        if self.format is StickerFormatType.gif:
-            self.url: str = f'https://media.discordapp.net/stickers/{self.id}.gif'
-        else:
-            self.url: str = f'{Asset.BASE}/stickers/{self.id}.webp'
+        ext = 'gif' if self.format is StickerFormatType.gif else 'webp'
+        self.url: str = f'{Asset.BASE}/stickers/{self.id}.{ext}'
 
     def __repr__(self) -> str:
         return f'<Sticker id={self.id} name={self.name!r}>'
