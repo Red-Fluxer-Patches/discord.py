@@ -539,10 +539,15 @@ class ConnectionState(Generic[ClientT]):
 
     def _guild_needs_chunking(self, guild: Guild) -> bool:
         # 1. Fluxer needs chunking for small guilds
-        # 2. For chunking to be possible, the bot needs to have Manage Roles, Kick Members, and Ban Members perms.
+        # 2. If client user is not a bot, chunking is only possible
+        #    when the client user has Manage Roles, Kick Members, and Ban Members perms.
         #    Ref:
-        #    https://github.com/fluxerapp/fluxer/blob/c2b69be17d1877c5bb82d10c77fa67cbe4e882d7/fluxer_gateway/src/guild/guild_request_members.erl#L163-L178
-        return self._chunk_guilds and not guild.chunked and guild.me.guild_permissions >= self._REQUEST_MEMBERS_PERMS
+        #    https://github.com/fluxerapp/fluxer/blob/569146c5bcd18774301a5b6f58db57885b6b5af2/fluxer_gateway/src/guild/guild_request_members_filter.erl#L47-L79
+        return (
+            self._chunk_guilds
+            and not guild.chunked
+            and (self.user.bot or guild.me.guild_permissions >= self._REQUEST_MEMBERS_PERMS)
+        )
 
     def _get_guild_channel(
         self, data: PartialMessagePayload, guild_id: Optional[int] = None
