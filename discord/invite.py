@@ -26,13 +26,14 @@ from __future__ import annotations
 
 from typing import List, Optional, Union, TYPE_CHECKING
 from .asset import Asset
-from .utils import parse_time, snowflake_time, _get_as_snowflake
+from .utils import classproperty, parse_time, snowflake_time, _get_as_snowflake
 from .object import Object
 from .mixins import Hashable
 from .enums import ChannelType, NSFWLevel, VerificationLevel, InviteTarget, InviteType, try_enum
 from .appinfo import PartialAppInfo
 from .scheduled_event import ScheduledEvent
 from .flags import InviteFlags
+from .instance import get_instance
 
 __all__ = (
     'PartialInviteChannel',
@@ -384,7 +385,9 @@ class Invite(Hashable):
         '_flags',
     )
 
-    BASE = 'https://discord.gg'
+    @classproperty
+    def BASE(self) -> str:
+        return get_instance().endpoints.invite
 
     def __init__(
         self,

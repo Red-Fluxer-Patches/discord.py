@@ -640,7 +640,7 @@ class Client:
 
     # login state management
 
-    async def login(self, token: str) -> None:
+    async def login(self, token: str, *, origin_url: str = 'https://canary.fluxer.app') -> None:
         """|coro|
 
         Logs in the client with the specified credentials and
@@ -672,7 +672,7 @@ class Client:
             raise TypeError(f'expected token to be a str, received {token.__class__.__name__} instead')
         token = token.strip()
 
-        data = await self.http.static_login(token)
+        data = await self.http.static_login(token, origin_url=origin_url)
         self._connection.user = ClientUser(state=self._connection, data=data)
         self._application = await self.application_info()
         if self._connection.application_id is None:

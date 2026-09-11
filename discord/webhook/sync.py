@@ -45,6 +45,7 @@ from ..errors import HTTPException, Forbidden, NotFound, DiscordServerError
 from ..message import Message, MessageFlags
 from ..http import Route, handle_message_parameters
 from ..channel import PartialMessageable, ForumTag
+from ..instance import get_instance
 
 from .async_ import BaseWebhook, _WebhookState
 
@@ -617,7 +618,7 @@ class SyncWebhook(BaseWebhook):
     @property
     def url(self) -> str:
         """:class:`str` : Returns the webhook's url."""
-        return f'https://api.fluxer.app/webhooks/{self.id}/{self.token}'
+        return f'{get_instance().endpoints.api_public}/webhooks/{self.id}/{self.token}'
 
     @classmethod
     def partial(cls, id: int, token: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> SyncWebhook:

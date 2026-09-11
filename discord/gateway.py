@@ -43,6 +43,7 @@ from . import utils
 from .activity import BaseActivity
 from .enums import SpeakingState
 from .errors import ConnectionClosed
+from .instance import get_instance
 
 _log = logging.getLogger(__name__)
 
@@ -307,8 +308,11 @@ class DiscordWebSocket:
         gateway: yarl.URL
         _max_heartbeat_timeout: float
 
+    @utils.classproperty
+    def DEFAULT_GATEWAY(self) -> yarl.URL:
+        return yarl.URL(get_instance().endpoints.gateway)
+
     # fmt: off
-    DEFAULT_GATEWAY    = yarl.URL('wss://gateway.fluxer.app/')
     DISPATCH                    = 0
     HEARTBEAT                   = 1
     IDENTIFY                    = 2

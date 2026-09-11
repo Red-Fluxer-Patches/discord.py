@@ -619,7 +619,7 @@ class GuildChannel:
 
         .. versionadded:: 2.0
         """
-        return f'https://fluxer.app/channels/{self.guild.id}/{self.id}'
+        return f'{self._state.http.instance.endpoints.webapp}/channels/{self.guild.id}/{self.id}'
 
     @property
     def created_at(self) -> datetime:

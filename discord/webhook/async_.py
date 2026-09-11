@@ -47,6 +47,7 @@ from ..http import Route, handle_message_parameters, MultipartParameters, HTTPCl
 from ..mixins import Hashable
 from ..channel import TextChannel, ForumChannel, PartialMessageable, ForumTag
 from ..file import File
+from ..instance import get_instance
 
 __all__ = (
     'Webhook',
@@ -1190,7 +1191,7 @@ class Webhook(BaseWebhook):
     @property
     def url(self) -> str:
         """:class:`str` : Returns the webhook's url."""
-        return f'https://api.fluxer.app/webhooks/{self.id}/{self.token}'
+        return f'{get_instance().endpoints.api_public}/webhooks/{self.id}/{self.token}'
 
     @classmethod
     def partial(

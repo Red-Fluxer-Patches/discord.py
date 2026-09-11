@@ -30,6 +30,7 @@ from typing import Any, Literal, Optional, TYPE_CHECKING, Tuple, Union
 from .errors import DiscordException
 from . import utils
 from .file import File
+from .instance import get_instance
 
 import yarl
 
@@ -207,7 +208,9 @@ class Asset(AssetMixin):
         '_key',
     )
 
-    BASE = 'https://fluxerusercontent.com'
+    @utils.classproperty
+    def BASE(self) -> str:
+        return get_instance().endpoints.media
 
     def __init__(self, state: _State, *, url: str, key: str, animated: bool = False) -> None:
         self._state: _State = state

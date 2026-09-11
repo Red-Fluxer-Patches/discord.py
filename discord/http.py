@@ -27,6 +27,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import sys
+from contextvars import ContextVar
 from typing import (
     Any,
     ClassVar,
@@ -56,6 +57,7 @@ from .gateway import DiscordClientWebSocketResponse
 from .file import File
 from .mentions import AllowedMentions
 from . import __version__, utils
+from .instance import InstanceDiscovery, get_instance, set_instance
 from .utils import MISSING
 from .flags import MessageFlags
 
@@ -303,19 +305,23 @@ def _set_api_version(value: int):
         raise ValueError(f'expected 1 not {value}')
 
     INTERNAL_API_VERSION = value
-    Route.BASE = f'https://api.fluxer.app/v{value}'
 
 
 class Route:
-    BASE: ClassVar[str] = 'https://api.fluxer.app/v1'
+    @utils.classproperty
+    def BASE(self) -> str:
+        instance = get_instance()
+        return f'{instance.endpoints.api_public}/v{INTERNAL_API_VERSION}'
 
-    def __init__(self, method: str, path: str, *, metadata: Optional[str] = None, **parameters: Any) -> None:
+    def __init__(
+        self, method: str, path: str, *, metadata: Optional[str] = None, base: str = '', **parameters: Any
+    ) -> None:
         self.path: str = path
         self.method: str = method
         # Metadata is a special string used to differentiate between known sub rate limits
         # Since these can't be handled generically, this is the next best way to do so.
         self.metadata: Optional[str] = metadata
-        url = self.BASE + self.path
+        url = (base or self.BASE) + self.path
         if parameters:
             url = url.format_map({k: _uriquote(v, safe='') if isinstance(v, str) else v for k, v in parameters.items()})
         self.url: str = url
@@ -537,6 +543,7 @@ class HTTPClient:
         self._buckets: Dict[str, Ratelimit] = {}
         self._global_over: asyncio.Event = MISSING
         self.token: Optional[str] = None
+        self.instance: InstanceDiscovery = MISSING  # filled in static_login
         self.proxy: Optional[str] = proxy
         self.proxy_auth: Optional[aiohttp.BasicAuth] = proxy_auth
         self.http_trace: Optional[aiohttp.TraceConfig] = http_trace
@@ -818,7 +825,7 @@ class HTTPClient:
 
     # login management
 
-    async def static_login(self, token: str) -> user.User:
+    async def static_login(self, token: str, *, origin_url: str) -> user.User:
         # Necessary to get aiohttp to stop complaining about session creation
         if self.connector is MISSING:
             self.connector = aiohttp.TCPConnector(limit=0)
@@ -833,15 +840,26 @@ class HTTPClient:
         self._global_over.set()
 
         old_token = self.token
+        self.token = None
+
+        try:
+            instance_discovery = await self.request(Route('GET', '/.well-known/fluxer', base=origin_url))
+            instance = InstanceDiscovery(origin_url, instance_discovery)
+        finally:
+            self.token = old_token
+
         self.token = token
 
         try:
-            data = await self.request(Route('GET', '/users/@me'))
+            data = await self.request(Route('GET', '/users/@me', base=instance.endpoints.api_public))
         except HTTPException as exc:
             self.token = old_token
             if exc.status == 401:
                 raise LoginFailure('Improper token has been passed.') from exc
             raise
+
+        self.instance = instance
+        set_instance(instance)
 
         return data
 

@@ -723,7 +723,7 @@ class MessageReference:
         .. versionadded:: 1.7
         """
         guild_id = self.guild_id if self.guild_id is not None else '@me'
-        return f'https://fluxer.app/channels/{guild_id}/{self.channel_id}/{self.message_id}'
+        return f'{self._state.http.instance.endpoints.webapp}/channels/{guild_id}/{self.channel_id}/{self.message_id}'
 
     def __repr__(self) -> str:
         return f'<MessageReference message_id={self.message_id!r} channel_id={self.channel_id!r} guild_id={self.guild_id!r}>'
@@ -1233,7 +1233,7 @@ class PartialMessage(Hashable):
     def jump_url(self) -> str:
         """:class:`str`: Returns a URL that allows the client to jump to this message."""
         guild_id = getattr(self.guild, 'id', '@me')
-        return f'https://fluxer.app/channels/{guild_id}/{self.channel.id}/{self.id}'
+        return f'{self._state.http.instance.endpoints.webapp}/channels/{guild_id}/{self.channel.id}/{self.id}'
 
     @property
     def thread(self) -> Optional[Thread]:
