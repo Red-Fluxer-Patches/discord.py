@@ -951,7 +951,7 @@ class Member(discord.abc.Messageable, _UserTag):
                     raise TypeError(
                         'timed_out_until must be an aware datetime. Consider using discord.utils.utcnow() or datetime.datetime.now().astimezone() for local time.'
                     )
-                payload['communication_disabled_until'] = timed_out_until.isoformat()
+                payload['communication_disabled_until'] = timed_out_until.isoformat().replace("+00:00", "Z")
 
         if bypass_verification is not MISSING:
             flags = MemberFlags._from_value(self._flags)
