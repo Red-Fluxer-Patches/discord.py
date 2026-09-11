@@ -2662,7 +2662,6 @@ class HTTPClient:
     def application_info(self) -> Response[appinfo.AppInfo]:
         # /oauth2/applications/@me seems to be the same endpoint
         # but Fluxer only has the one below
-        # The endpoint does not contain the app owner.
         return self.request(Route('GET', '/applications/@me'))
 
     def edit_application_info(self, *, reason: Optional[str], payload: Any) -> Response[appinfo.AppInfo]:
