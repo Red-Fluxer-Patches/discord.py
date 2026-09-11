@@ -1141,7 +1141,7 @@ class ConnectionState(Generic[ClientT]):
         self.dispatch('member_join', member)
 
     def parse_guild_member_remove(self, data: gw.GuildMemberRemoveEvent) -> None:
-        # the user object in this event on Fluxer only contains
+        # the user object in this event on Fluxer only contains an 'id'
         raw_user = data['user']
         # user = self.store_user(raw_user)
         raw = RawMemberRemoveEvent(data, None)
