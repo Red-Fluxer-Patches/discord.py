@@ -822,7 +822,7 @@ class Client:
         self._connection.clear()
         self.http.clear()
 
-    async def start(self, token: str, *, reconnect: bool = True) -> None:
+    async def start(self, token: str, *, origin_url: str = "https://canary.fluxer.app", reconnect: bool = True) -> None:
         """|coro|
 
         A shorthand coroutine for :meth:`login` + :meth:`connect`.
@@ -843,7 +843,7 @@ class Client:
         TypeError
             An unexpected keyword argument was received.
         """
-        await self.login(token)
+        await self.login(token, origin_url=origin_url)
         await self.connect(reconnect=reconnect)
 
     def run(
