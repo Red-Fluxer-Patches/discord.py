@@ -284,7 +284,7 @@ def parse_time(timestamp: Optional[str]) -> Optional[datetime.datetime]: ...
 def parse_time(timestamp: Optional[str]) -> Optional[datetime.datetime]:
     if timestamp:
         # Fluxer returns timestamp with "Z" timezone - unsupported by Python 3.8
-        return datetime.datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        return datetime.datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
     return None
 
 

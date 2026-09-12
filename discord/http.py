@@ -313,9 +313,7 @@ class Route:
         instance = get_instance()
         return f'{instance.endpoints.api_public}/v{INTERNAL_API_VERSION}'
 
-    def __init__(
-        self, method: str, path: str, *, metadata: Optional[str] = None, base: str = '', **parameters: Any
-    ) -> None:
+    def __init__(self, method: str, path: str, *, metadata: Optional[str] = None, base: str = '', **parameters: Any) -> None:
         self.path: str = path
         self.method: str = method
         # Metadata is a special string used to differentiate between known sub rate limits

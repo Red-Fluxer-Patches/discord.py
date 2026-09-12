@@ -821,7 +821,7 @@ class AuditLogEntry(Hashable):
         self.user_id: Optional[int] = utils._get_as_snowflake(data, 'user_id')
         self.user: Optional[Union[User, Member]] = self._get_member(self.user_id)
         self._target_id = None
-        if self.action.target_type != "invite":
+        if self.action.target_type != 'invite':
             self._target_id = utils._get_as_snowflake(data, 'target_id')
 
     def _get_member(self, user_id: Optional[int]) -> Union[Member, User, None]:

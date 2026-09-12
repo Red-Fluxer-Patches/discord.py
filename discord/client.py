@@ -822,7 +822,7 @@ class Client:
         self._connection.clear()
         self.http.clear()
 
-    async def start(self, token: str, *, origin_url: str = "https://canary.fluxer.app", reconnect: bool = True) -> None:
+    async def start(self, token: str, *, origin_url: str = 'https://canary.fluxer.app', reconnect: bool = True) -> None:
         """|coro|
 
         A shorthand coroutine for :meth:`login` + :meth:`connect`.
