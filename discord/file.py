@@ -28,6 +28,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import os
 import io
 
+from .flags import AttachmentFlags
 from .utils import MISSING
 
 # fmt: off
@@ -164,8 +165,11 @@ class File:
     def to_dict(self, index: int) -> Dict[str, Any]:
         payload = {
             'id': index,
-            'filename': self.filename,
+            'filename': self._filename,
         }
+        flags = AttachmentFlags(spoiler=self.spoiler)
+        if flags:
+            payload['flags'] = flags.value
 
         if self.description is not None:
             payload['description'] = self.description
