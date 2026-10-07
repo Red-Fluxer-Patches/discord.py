@@ -640,7 +640,7 @@ class Client:
 
     # login state management
 
-    async def login(self, token: str, *, origin_url: str = 'https://canary.fluxer.app') -> None:
+    async def login(self, token: str, *, origin_url: str = 'https://canary.fluxer.app', bot: bool = True) -> None:
         """|coro|
 
         Logs in the client with the specified credentials and
@@ -652,6 +652,9 @@ class Client:
         token: :class:`str`
             The authentication token. Do not prefix this token with
             anything as the library will do it for you.
+        bot: :class:`bool`
+            Keyword argument that specifies if the account logging on is a bot
+            token or not.
 
         Raises
         ------
@@ -672,19 +675,21 @@ class Client:
             raise TypeError(f'expected token to be a str, received {token.__class__.__name__} instead')
         token = token.strip()
 
-        data = await self.http.static_login(token, origin_url=origin_url)
+        data = await self.http.static_login(token, origin_url=origin_url, bot=bot)
+        self._connection.is_bot = bot
         self._connection.user = ClientUser(state=self._connection, data=data)
-        self._application = await self.application_info()
-        if self._connection.application_id is None:
-            self._connection.application_id = self._application.id
+        if bot:
+            self._application = await self.application_info()
+            if self._connection.application_id is None:
+                self._connection.application_id = self._application.id
 
-        if self._application.interactions_endpoint_url is not None:
-            _log.warning(
-                'Application has an interaction endpoint URL set, this means registered components and app commands will not be received by the library.'
-            )
+            if self._application.interactions_endpoint_url is not None:
+                _log.warning(
+                    'Application has an interaction endpoint URL set, this means registered components and app commands will not be received by the library.'
+                )
 
-        if not self._connection.application_flags:
-            self._connection.application_flags = self._application.flags
+            if not self._connection.application_flags:
+                self._connection.application_flags = self._application.flags
 
         await self.setup_hook()
 
@@ -822,7 +827,9 @@ class Client:
         self._connection.clear()
         self.http.clear()
 
-    async def start(self, token: str, *, origin_url: str = 'https://canary.fluxer.app', reconnect: bool = True) -> None:
+    async def start(
+        self, token: str, *, origin_url: str = 'https://canary.fluxer.app', bot: bool = True, reconnect: bool = True
+    ) -> None:
         """|coro|
 
         A shorthand coroutine for :meth:`login` + :meth:`connect`.
@@ -837,13 +844,16 @@ class Client:
             failure or a specific failure on Discord's part. Certain
             disconnects that lead to bad state will not be handled (such as
             invalid sharding payloads or bad tokens).
+        bot: :class:`bool`
+            Keyword argument that specifies if the account logging on is a bot
+            token or not.
 
         Raises
         -------
         TypeError
             An unexpected keyword argument was received.
         """
-        await self.login(token, origin_url=origin_url)
+        await self.login(token, origin_url=origin_url, bot=bot)
         await self.connect(reconnect=reconnect)
 
     def run(

@@ -494,7 +494,10 @@ class AutoShardedClient(Client):
         if self.is_closed():
             return
 
-        if self.shard_count is None:
+        if not self._connection.is_bot:
+            self.shard_count = 1
+            gateway = DiscordWebSocket.DEFAULT_GATEWAY
+        elif self.shard_count is None:
             self.shard_count: int
             self.shard_count, gateway_url, _session_start_limit = await self.http.get_bot_gateway()
             gateway = yarl.URL(gateway_url)

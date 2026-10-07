@@ -197,6 +197,7 @@ class ConnectionState(Generic[ClientT]):
             self.max_messages = 1000
 
         self.dispatch: Callable[..., Any] = dispatch
+        self.is_bot: Optional[bool] = None
         self.handlers: Dict[str, Callable[..., Any]] = handlers
         self.hooks: Dict[str, Callable[..., Coroutine[Any, Any, Any]]] = hooks
         self.shard_count: Optional[int] = None
@@ -507,7 +508,7 @@ class ConnectionState(Generic[ClientT]):
         channel_id = channel.id
         self._private_channels[channel_id] = channel
 
-        if len(self._private_channels) > 128:
+        if self.is_bot and len(self._private_channels) > 128:
             _, to_remove = self._private_channels.popitem(last=False)
             if isinstance(to_remove, DMChannel) and to_remove.recipient:
                 self._private_channels_by_user.pop(to_remove.recipient.id, None)
@@ -687,7 +688,11 @@ class ConnectionState(Generic[ClientT]):
                 self.application_flags: ApplicationFlags = ApplicationFlags._from_value(application['flags'])
 
         for guild_data in data['guilds']:
-            self._add_guild_from_data(guild_data)  # type: ignore
+            guild = self._add_guild_from_data(guild_data)  # type: ignore
+            # user bots receive full guild objects in READY rather than later through GUILD_CREATE
+            # so we need to make sure they're considered for chunking in delayed ready
+            if not self.is_bot:
+                self._add_ready_state(guild)
 
         self.dispatch('connect')
         self._ready_task = asyncio.create_task(self._delay_ready())
@@ -1997,7 +2002,11 @@ class AutoShardedConnectionState(ConnectionState[ClientT]):
                 self.application_flags: ApplicationFlags = ApplicationFlags._from_value(application['flags'])
 
         for guild_data in data['guilds']:
-            self._add_guild_from_data(guild_data)  # type: ignore # _add_guild_from_data requires a complete Guild payload
+            guild = self._add_guild_from_data(guild_data)  # type: ignore # _add_guild_from_data requires a complete Guild payload
+            # user bots receive full guild objects in READY rather than later through GUILD_CREATE
+            # so we need to make sure they're considered for chunking in delayed ready
+            if not self.is_bot:
+                self._add_ready_state(guild)
 
         if self._messages:
             self._update_message_references()

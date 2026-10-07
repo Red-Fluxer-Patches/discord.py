@@ -541,6 +541,7 @@ class HTTPClient:
         self._buckets: Dict[str, Ratelimit] = {}
         self._global_over: asyncio.Event = MISSING
         self.token: Optional[str] = None
+        self.bot_token: bool = False
         self.instance: InstanceDiscovery = MISSING  # filled in static_login
         self.proxy: Optional[str] = proxy
         self.proxy_auth: Optional[aiohttp.BasicAuth] = proxy_auth
@@ -614,7 +615,7 @@ class HTTPClient:
         }
 
         if self.token is not None:
-            headers['Authorization'] = 'Bot ' + self.token
+            headers['Authorization'] = 'Bot ' + self.token if self.bot_token else self.token
         # some checking if it's a JSON request
         if 'json' in kwargs:
             headers['Content-Type'] = 'application/json'
@@ -823,7 +824,7 @@ class HTTPClient:
 
     # login management
 
-    async def static_login(self, token: str, *, origin_url: str) -> user.User:
+    async def static_login(self, token: str, *, origin_url: str, bot: bool) -> user.User:
         # Necessary to get aiohttp to stop complaining about session creation
         if self.connector is MISSING:
             self.connector = aiohttp.TCPConnector(limit=0)
@@ -846,12 +847,15 @@ class HTTPClient:
         finally:
             self.token = old_token
 
+        old_bot = self.bot_token
         self.token = token
+        self.bot_token = bot
 
         try:
             data = await self.request(Route('GET', '/users/@me', base=instance.endpoints.api_public))
         except HTTPException as exc:
             self.token = old_token
+            self.bot_token = old_bot
             if exc.status == 401:
                 raise LoginFailure('Improper token has been passed.') from exc
             raise
