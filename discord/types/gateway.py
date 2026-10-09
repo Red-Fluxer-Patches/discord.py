@@ -258,7 +258,7 @@ class GuildStickersUpdateEvent(TypedDict):
     stickers: List[GuildSticker]
 
 
-GuildCreateEvent = GuildUpdateEvent = Guild
+GuildCreateEvent = GuildSyncEvent = GuildUpdateEvent = Guild
 GuildDeleteEvent = UnavailableGuild
 
 

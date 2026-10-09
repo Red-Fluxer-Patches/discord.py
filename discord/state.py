@@ -1391,6 +1391,8 @@ class ConnectionState(Generic[ClientT]):
         else:
             self.dispatch('guild_join', guild)
 
+    parse_guild_sync = parse_guild_create
+
     def parse_guild_update(self, data: gw.GuildUpdateEvent) -> None:
         guild = self._get_guild(int(data['id']))
         if guild is not None:
