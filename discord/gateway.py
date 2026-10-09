@@ -287,8 +287,6 @@ class DiscordWebSocket:
     HEARTBEAT_ACK
         Receive only. Confirms receiving of a heartbeat. Not having it implies
         a connection issue.
-    GUILD_SYNC
-        Send only. Requests a guild sync.
     LAZY_REQUEST
         Send only. Requests lazy-loaded guild data, i.e. subscribes to relevant events.
     gateway
@@ -325,7 +323,6 @@ class DiscordWebSocket:
     INVALIDATE_SESSION          = 9
     HELLO                       = 10
     HEARTBEAT_ACK               = 11
-    GUILD_SYNC                  = 12
     LAZY_REQUEST                = 14
     # fmt: on
 
