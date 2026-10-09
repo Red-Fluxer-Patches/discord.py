@@ -1287,6 +1287,7 @@ class ConnectionState(Generic[ClientT]):
             guild = self._get_guild(int(data['id']))
             if guild is not None:
                 guild.unavailable = False
+                data.update(data.pop('properties', {}))
                 guild._from_data(data)
                 return guild
 
