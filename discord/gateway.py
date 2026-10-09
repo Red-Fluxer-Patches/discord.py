@@ -60,6 +60,7 @@ if TYPE_CHECKING:
 
     from .client import Client
     from .state import ConnectionState
+    from .types import gateway as gw
     from .voice_state import VoiceConnectionState
 
 
@@ -762,35 +763,10 @@ class DiscordWebSocket:
 
         await self.send_as_json(payload)
 
-    async def update_lazy_subscriptions(
-        self,
-        guild_id: int,
-        *,
-        active: Optional[bool] = None,
-        sync: Optional[bool] = None,
-        typing: Optional[bool] = None,
-        member_list_channel_ids: List[int] = None,
-        member_ids: Optional[List[int]] = None,
-    ) -> None:
-        subscription: Any = {}
-        if active is not None:
-            subscription['active'] = active
-        if sync is not None:
-            subscription['sync'] = sync
-        if typing is not None:
-            subscription['typing'] = typing
-        if member_ids is not None:
-            subscription['members'] = member_ids
-        if member_list_channel_ids is not None:
-            subscription['member_list_channels'] = member_list_channel_ids
-
+    async def update_lazy_subscriptions(self, subscriptions: Dict[int, gw.GuildSubscription]) -> None:
         payload = {
             'op': self.LAZY_REQUEST,
-            'd': {
-                'subscriptions': {
-                    str(guild_id): subscription,
-                },
-            },
+            'd': {'subscriptions': {str(guild_id): subscription for guild_id, subscription in subscriptions.items()}},
         }
 
         await self.send_as_json(payload)

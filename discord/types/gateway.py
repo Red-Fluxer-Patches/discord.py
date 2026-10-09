@@ -65,6 +65,16 @@ class GatewayBot(Gateway):
     session_start_limit: SessionStartLimit
 
 
+class GuildSubscription(TypedDict, total=False):
+    active: bool
+    sync: bool
+    typing: bool
+    member_list_channel_ids: List[Snowflake]
+    member_ids: List[int]
+    threads: bool
+    thread_member_lists: List[Snowflake]
+
+
 class ReadyEvent(TypedDict):
     v: int
     user: User

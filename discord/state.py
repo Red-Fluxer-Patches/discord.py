@@ -27,6 +27,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque, OrderedDict
 import copy
+import itertools
 import logging
 from typing import (
     Dict,
@@ -44,6 +45,7 @@ from typing import (
     Tuple,
     Deque,
     Literal,
+    Iterable,
     overload,
 )
 import weakref
@@ -593,6 +595,22 @@ class ConnectionState(Generic[ClientT]):
         if cached is not None and cached.poll:
             cached.poll._update_results_from_message(from_)
 
+    async def mark_guilds_as_active(self, guild_ids: Iterable[int]) -> None:
+        shard_count = self.shard_count or 1
+
+        def key_func(guild_id: int) -> int:
+            return (guild_id >> 22) % shard_count
+
+        guild_ids = sorted(guild_ids, key=key_func)
+        for shard_id, shard_guild_ids in itertools.groupby(guild_ids, key=key_func):
+            subscriptions: Dict[int, gw.GuildSubscription] = {
+                guild_id: {'active': True, 'threads': True}
+                for guild_id in shard_guild_ids
+            }
+            ws = self._get_websocket(shard_id=shard_id)
+            _log.info('Marking %s guilds active in shard ID %s', len(subscriptions), shard_id)
+            await ws.update_lazy_subscriptions(subscriptions)
+
     async def chunker(
         self, guild_id: int, query: str = '', limit: int = 0, presences: bool = False, *, nonce: Optional[str] = None
     ) -> None:
@@ -622,6 +640,10 @@ class ConnectionState(Generic[ClientT]):
 
     async def _delay_ready(self) -> None:
         try:
+            # Mark all guilds as active
+            if not self.is_bot:
+                await self.mark_guilds_as_active(self._guilds)
+
             states = []
             while True:
                 # this snippet of code is basically waiting N seconds
@@ -1323,6 +1345,9 @@ class ConnectionState(Generic[ClientT]):
         return max(5.0, (guild.member_count or 0) / 10000)
 
     async def _chunk_and_dispatch(self, guild, unavailable):
+        if not self.is_bot:
+            await self.mark_guilds_as_active((guild.id,))
+
         timeout = self._chunk_timeout(guild)
 
         try:
@@ -1930,8 +1955,13 @@ class AutoShardedConnectionState(ConnectionState[ClientT]):
         self.call_handlers('ready')
         self.dispatch('ready')
 
-    async def _delay_shard_ready(self, shard_id: int) -> None:
+    async def _delay_shard_ready(self, shard_id: int, guild_ids: Iterable[int]) -> None:
         try:
+            # Mark all guilds as active
+            if not self.is_bot:
+                await self.mark_guilds_as_active(guild_ids)
+            del guild_ids
+
             states = []
             while True:
                 # this snippet of code is basically waiting N seconds
@@ -2002,12 +2032,14 @@ class AutoShardedConnectionState(ConnectionState[ClientT]):
                 self.application_id: Optional[int] = utils._get_as_snowflake(application, 'id')
                 self.application_flags: ApplicationFlags = ApplicationFlags._from_value(application['flags'])
 
+        guild_ids = []
         for guild_data in data['guilds']:
             guild = self._add_guild_from_data(guild_data)  # type: ignore # _add_guild_from_data requires a complete Guild payload
             # user bots receive full guild objects in READY rather than later through GUILD_CREATE
             # so we need to make sure they're considered for chunking in delayed ready
             if not self.is_bot:
                 self._add_ready_state(guild)
+            guild_ids.append(guild.id)
 
         if self._messages:
             self._update_message_references()
@@ -2015,7 +2047,7 @@ class AutoShardedConnectionState(ConnectionState[ClientT]):
         self.dispatch('connect')
         self.dispatch('shard_connect', shard_id)
 
-        self._ready_tasks[shard_id] = asyncio.create_task(self._delay_shard_ready(shard_id))
+        self._ready_tasks[shard_id] = asyncio.create_task(self._delay_shard_ready(shard_id, guild_ids))
 
         # The delay task for every shard has been started
         if len(self._ready_tasks) == len(self.shard_ids):
