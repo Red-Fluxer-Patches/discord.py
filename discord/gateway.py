@@ -462,8 +462,8 @@ class DiscordWebSocket:
                 'token': self.token,
                 'properties': {
                     'os': sys.platform,
-                    'browser': 'discord.py',
-                    'device': 'discord.py',
+                    'browser': 'Red-Fluxer-Patches/discord.py',
+                    'device': 'Red-Fluxer-Patches/discord.py',
                 },
                 'compress': True,
                 'large_threshold': 250,
