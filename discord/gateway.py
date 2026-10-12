@@ -470,7 +470,7 @@ class DiscordWebSocket:
                 'large_threshold': 250,
                 # Enabled session flags:
                 # - CHANNEL_THREADS (1 << 2)
-                'flags': 2,
+                'flags': 4,
             },
         }
 
