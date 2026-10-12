@@ -612,6 +612,7 @@ class HTTPClient:
         # header creation
         headers: Dict[str, str] = {
             'User-Agent': self.user_agent,
+            'X-Fluxer-Features': 'channel_threads',
         }
 
         if self.token is not None:
