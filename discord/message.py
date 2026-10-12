@@ -1696,6 +1696,10 @@ class PartialMessage(Hashable):
         if self.guild is None:
             raise ValueError('This message does not have guild info attached.')
 
+        # Fluxer does not accept null in slowmode_delay - 0 needs to be provided instead.
+        if slowmode_delay is None:
+            slowmode_delay = 0
+
         # On Fluxer, when default_auto_archive_duration is unset, the default is 3 days (4320) rather than 1 day (1440).
         default_auto_archive_duration: ThreadArchiveDuration = getattr(self.channel, 'default_auto_archive_duration', 4320)
         data = await self._state.http.start_thread_with_message(

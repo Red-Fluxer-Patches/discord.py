@@ -957,6 +957,10 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         if type is None:
             type = ChannelType.private_thread
 
+        # Fluxer does not accept null in slowmode_delay - 0 needs to be provided instead.
+        if slowmode_delay is None:
+            slowmode_delay = 0
+
         if message is None:
             data = await self._state.http.start_thread_without_message(
                 self.id,
@@ -3023,7 +3027,8 @@ class ForumChannel(discord.abc.GuildChannel, Hashable):
         channel_payload = {
             'name': name,
             'auto_archive_duration': auto_archive_duration or self.default_auto_archive_duration,
-            'rate_limit_per_user': slowmode_delay,
+            # Fluxer does not accept null in slowmode_delay - 0 needs to be provided instead.
+            'rate_limit_per_user': slowmode_delay if slowmode_delay is not None else 0,
             'type': 11,  # Private threads don't seem to be allowed
         }
 
