@@ -380,8 +380,10 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         self.nsfw: bool = data.get('nsfw', False)
         # Does this need coercion into `int`? No idea yet.
         self.slowmode_delay: int = data.get('rate_limit_per_user', 0)
-        self.default_auto_archive_duration: ThreadArchiveDuration = data.get('default_auto_archive_duration', 1440)
-        self.default_thread_slowmode_delay: int = data.get('default_thread_rate_limit_per_user', 0)
+        # On Fluxer, default_auto_archive_duration and default_thread_rate_limit_per_user may be present with null/0 value.
+        # When default_auto_archive_duration is unset, the default is 3 days (4320) rather than 1 day (1440).
+        self.default_auto_archive_duration: ThreadArchiveDuration = data.get('default_auto_archive_duration') or 1440
+        self.default_thread_slowmode_delay: int = data.get('default_thread_rate_limit_per_user') or 0
         self._type: Literal[0, 5] = data.get('type', self._type)
         self.last_message_id: Optional[int] = utils._get_as_snowflake(data, 'last_message_id')
         self._fill_overwrites(data)
@@ -2483,11 +2485,14 @@ class ForumChannel(discord.abc.GuildChannel, Hashable):
         self.position: int = data['position']
         self.nsfw: bool = data.get('nsfw', False)
         self.slowmode_delay: int = data.get('rate_limit_per_user', 0)
-        self.default_auto_archive_duration: ThreadArchiveDuration = data.get('default_auto_archive_duration', 1440)
+        # On Fluxer, default_auto_archive_duration and default_thread_rate_limit_per_user are always present
+        # in forum/media channels. They can be null or 0 when unset, respectively.
+        # When default_auto_archive_duration is unset, the default is 3 days (4320) rather than 1 day (1440).
+        self.default_auto_archive_duration: ThreadArchiveDuration = data['default_auto_archive_duration'] or 4320
+        self.default_thread_slowmode_delay: int = data['default_thread_rate_limit_per_user'] or 0
         self.last_message_id: Optional[int] = utils._get_as_snowflake(data, 'last_message_id')
         # This takes advantage of the fact that dicts are ordered since Python 3.7
         tags = [ForumTag.from_data(state=self._state, data=tag) for tag in data.get('available_tags', [])]
-        self.default_thread_slowmode_delay: int = data.get('default_thread_rate_limit_per_user', 0)
         self.default_layout: ForumLayoutType = try_enum(ForumLayoutType, data.get('default_forum_layout', 0))
         self._available_tags: Dict[int, ForumTag] = {tag.id: tag for tag in tags}
 
