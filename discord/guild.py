@@ -470,6 +470,10 @@ class Guild(Hashable):
         self._soundboard_sounds: Dict[int, SoundboardSound] = {}
         self._state: ConnectionState = state
         self._member_count: Optional[int] = None
+        # Fluxer: Ensure that these are always set since we may skip doing so in _from_data()
+        self._roles: Dict[int, Role] = {}
+        self.emojis: Tuple[Emoji, ...] = ()
+        self.stickers: Tuple[GuildSticker, ...] = ()
         self._from_data(data)
 
     def _add_channel(self, channel: GuildChannel, /) -> None:
@@ -592,22 +596,26 @@ class Guild(Hashable):
         self._banner: Optional[str] = guild.get('banner')
         self.unavailable: bool = guild.get('unavailable', False)
         self.id: int = int(guild['id'])
-        self._roles: Dict[int, Role] = {}
-        state = self._state  # speed up attribute access
-        for r in guild.get('roles', []):
-            role = Role(guild=self, data=r, state=state)
-            self._roles[role.id] = role
+        # Fluxer does not include roles, emojis, and stickers in GUILD_UPDATE
+        if 'roles' in guild:
+            self._roles = {}
+            state = self._state  # speed up attribute access
+            for r in guild['roles']:
+                role = Role(guild=self, data=r, state=state)
+                self._roles[role.id] = role
 
-        self.emojis: Tuple[Emoji, ...] = (
-            tuple(map(lambda d: state.store_emoji(self, d), guild.get('emojis', [])))
-            if state.cache_guild_expressions
-            else ()
-        )
-        self.stickers: Tuple[GuildSticker, ...] = (
-            tuple(map(lambda d: state.store_sticker(self, d), guild.get('stickers', [])))
-            if state.cache_guild_expressions
-            else ()
-        )
+        if 'emojis' in guild:
+            self.emojis = (
+                tuple(map(lambda d: state.store_emoji(self, d), guild['emojis']))
+                if state.cache_guild_expressions
+                else ()
+            )
+        if 'stickers' in guild:
+            self.stickers = (
+                tuple(map(lambda d: state.store_sticker(self, d), guild['stickers']))
+                if state.cache_guild_expressions
+                else ()
+            )
         self.features: List[GuildFeature] = guild.get('features', [])
         self._splash: Optional[str] = guild.get('splash')
         self._system_channel_id: Optional[int] = utils._get_as_snowflake(guild, 'system_channel_id')
