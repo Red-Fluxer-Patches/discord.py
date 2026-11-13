@@ -640,7 +640,7 @@ class Client:
 
     # login state management
 
-    async def login(self, token: str, *, origin_url: str = 'https://canary.fluxer.app', bot: bool = True) -> None:
+    async def login(self, token: str, *, origin_url: str = 'https://canary.fluxer.com', bot: bool = True) -> None:
         """|coro|
 
         Logs in the client with the specified credentials and
@@ -828,7 +828,7 @@ class Client:
         self.http.clear()
 
     async def start(
-        self, token: str, *, origin_url: str = 'https://canary.fluxer.app', bot: bool = True, reconnect: bool = True
+        self, token: str, *, origin_url: str = 'https://canary.fluxer.com', bot: bool = True, reconnect: bool = True
     ) -> None:
         """|coro|
 
